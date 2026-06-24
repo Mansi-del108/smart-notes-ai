@@ -1,0 +1,438 @@
+/* ==========================================================================
+   Smart Notes AI - Modern CSS Stylesheet (Blue Color Theme)
+   ========================================================================== */
+
+/* Design System & Variables */
+:root {
+    --primary-color: #2563eb;       /* Modern royal blue */
+    --primary-hover: #1d4ed8;       /* Darker blue for active/hover */
+    --primary-light: #eff6ff;       /* Very light tint for backgrounds */
+    --primary-border: #bfdbfe;      /* Border highlight blue */
+    --text-main: #1e293b;           /* Slate 800 - high contrast and readable */
+    --text-muted: #64748b;          /* Slate 500 - secondary labels */
+    --bg-page: #f8fafc;             /* Slate 50 - clean page canvas */
+    --bg-card: #ffffff;             /* Pure white container */
+    --accent-green: #10b981;        /* Success/correct state */
+    --accent-red: #ef4444;          /* Danger/error state */
+    
+    /* Layout Tokens */
+    --border-radius: 12px;
+    --border-radius-sm: 8px;
+    --transition-speed: 0.25s;
+    --max-width: 800px;
+    --shadow-main: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    --shadow-hover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* Reset & Base Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-page);
+    color: var(--text-main);
+    line-height: 1.6;
+    padding: 2rem 1rem;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+/* Main Container Layout */
+.app-container {
+    width: 100%;
+    max-width: var(--max-width);
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+/* Header Aesthetics */
+.app-header {
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.logo-icon {
+    font-size: 2.25rem;
+}
+
+#app-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.025em;
+}
+
+.app-subtitle {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Premium Workspace Card */
+.workspace-card {
+    background-color: var(--bg-card);
+    border: 1px solid #e2e8f0;
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow-main);
+    transition: box-shadow var(--transition-speed) ease;
+}
+
+.workspace-card:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+/* Input Section Styling */
+.input-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.input-label {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+}
+
+textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--border-radius-sm);
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--text-main);
+    background-color: #fafbfc;
+    resize: vertical;
+    outline: none;
+    transition: all var(--transition-speed) ease;
+}
+
+textarea:focus {
+    border-color: var(--primary-color);
+    background-color: var(--bg-card);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Grid of Action Buttons */
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.25rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ffffff;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-btn:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.action-btn:active {
+    transform: translateY(1px);
+}
+
+.action-btn:focus-visible {
+    outline: 2px solid var(--primary-hover);
+    outline-offset: 2px;
+}
+
+/* Dividers */
+.section-divider {
+    border: 0;
+    height: 1px;
+    background-color: #e2e8f0;
+    margin: 2rem 0;
+}
+
+/* Output Area Styling */
+.output-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 150px;
+}
+
+.output-label {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-main);
+    border-bottom: 2px solid var(--primary-light);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Helper Utilities */
+.hidden {
+    display: none !important;
+}
+
+/* Placeholder Empty State */
+.output-placeholder-state {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    border: 2px dashed #cbd5e1;
+    border-radius: var(--border-radius-sm);
+    color: var(--text-muted);
+}
+
+.placeholder-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.placeholder-tip {
+    font-size: 0.85rem;
+    display: block;
+    margin-top: 0.5rem;
+    opacity: 0.8;
+}
+
+/* Loading State & Spinner */
+.output-loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2.5rem 1.5rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--primary-light);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Error State */
+.output-error-state {
+    display: flex;
+    gap: 1rem;
+    padding: 1.25rem;
+    border: 1px solid #fecaca;
+    background-color: #fef2f2;
+    border-radius: var(--border-radius-sm);
+    color: var(--accent-red);
+}
+
+.error-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.error-details h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.error-details p {
+    font-size: 0.9rem;
+    color: #991b1b;
+}
+
+/* Dynamic AI Output Containers */
+.output-content-area {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Summary Output Formatting */
+.summary-container {
+    padding: 0.5rem;
+}
+
+.summary-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+}
+
+.summary-paragraph {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--text-main);
+    text-align: justify;
+}
+
+/* MCQ Output Formatting */
+.mcq-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.mcq-item {
+    background-color: #fafbfc;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--border-radius-sm);
+    padding: 1.25rem;
+    transition: border-color var(--transition-speed) ease;
+}
+
+.mcq-item:hover {
+    border-color: var(--primary-border);
+}
+
+.mcq-question {
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+}
+
+.mcq-options {
+    list-style-type: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding-left: 0.5rem;
+}
+
+.mcq-option {
+    font-size: 0.95rem;
+    color: #475569;
+}
+
+.mcq-answer {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent-green);
+    background-color: #ecfdf5;
+    padding: 0.4rem 0.75rem;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* Flashcards Output Formatting */
+.flashcards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.flashcard {
+    background-color: var(--bg-card);
+    border: 2px solid var(--primary-light);
+    border-radius: var(--border-radius-sm);
+    padding: 1.25rem;
+    box-shadow: 0 2px 4px rgb(0 0 0 / 0.02);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1rem;
+    transition: all var(--transition-speed) ease;
+}
+
+.flashcard:hover {
+    border-color: var(--primary-border);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgb(0 0 0 / 0.04);
+}
+
+.flashcard-q {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.flashcard-a {
+    font-size: 0.95rem;
+    color: var(--text-main);
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 0.75rem;
+}
+
+.label-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+/* Footer Section */
+.app-footer {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 600px) {
+    body {
+        padding: 1rem 0.5rem;
+    }
+    
+    .workspace-card {
+        padding: 1.25rem;
+    }
+    
+    #app-title {
+        font-size: 1.85rem;
+    }
+    
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .flashcards-container {
+        grid-template-columns: 1fr;
+    }
+}

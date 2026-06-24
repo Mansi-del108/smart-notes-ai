@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Notes AI - Study Smarter</title>
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Main stylesheet link -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header Section -->
+        <header class="app-header">
+            <div class="logo-container">
+                <span class="logo-icon">✨</span>
+                <h1 id="app-title">Smart Notes AI</h1>
+            </div>
+            <p class="app-subtitle">Transform your study notes into summaries, multiple-choice questions, or flashcards instantly.</p>
+        </header>
+
+        <!-- Main Workspace Card -->
+        <main class="workspace-card">
+            <!-- Input Form Section -->
+            <section class="input-section">
+                <label for="notes-input" class="input-label">Paste Your Study Notes Here</label>
+                <textarea 
+                    id="notes-input" 
+                    placeholder="Enter or paste your text, lecture notes, or textbook paragraphs here (minimum 20 characters for best results)..." 
+                    rows="10"
+                ></textarea>
+                
+                <!-- Action Controls -->
+                <div class="actions-grid">
+                    <button id="btn-summarize" class="action-btn btn-primary" type="button">
+                        <span class="btn-icon">📝</span> Summarize Notes
+                    </button>
+                    <button id="btn-mcqs" class="action-btn btn-primary" type="button">
+                        <span class="btn-icon">❓</span> Generate MCQs
+                    </button>
+                    <button id="btn-flashcards" class="action-btn btn-primary" type="button">
+                        <span class="btn-icon">🎴</span> Generate Flashcards
+                    </button>
+                </div>
+            </section>
+
+            <!-- Divider Line -->
+            <hr class="section-divider">
+
+            <!-- Output Section -->
+            <section class="output-section">
+                <h2 class="output-label">AI Output</h2>
+                
+                <!-- Output Placeholder / Welcome Message -->
+                <div id="output-placeholder" class="output-placeholder-state">
+                    <div class="placeholder-icon">💡</div>
+                    <p>Your AI-generated content will appear here.</p>
+                    <span class="placeholder-tip">Tip: Paste some notes above and click one of the buttons to get started.</span>
+                </div>
+
+                <!-- Loading State Indicator -->
+                <div id="output-loading" class="output-loading-state hidden">
+                    <div class="spinner"></div>
+                    <p id="loading-text">Gemini is thinking and preparing your content...</p>
+                </div>
+
+                <!-- Error Message Container -->
+                <div id="output-error" class="output-error-state hidden">
+                    <span class="error-icon">⚠️</span>
+                    <div class="error-details">
+                        <h3>Something went wrong</h3>
+                        <p id="error-message">Failed to contact the AI model. Please verify your API key and network connection.</p>
+                    </div>
+                </div>
+
+                <!-- Content Output Area -->
+                <div id="output-content" class="output-content-area hidden">
+                    <!-- Dynamic content will be injected here by script.js -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>Smart Notes AI &bull; Powered by Google Gemini API</p>
+        </footer>
+    </div>
+
+    <!-- Main JavaScript Logic -->
+    <script src="script.js"></script>
+</body>
+</html>
