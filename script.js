@@ -2,51 +2,63 @@
 // Smart Notes AI - Main Application Logic (Vercel & note manager)
 // ==========================================================================
 
-// DOM Elements
-const notesInput = document.getElementById("notes-input");
-const btnSummarize = document.getElementById("btn-summarize");
-const btnMCQs = document.getElementById("btn-mcqs");
-const btnFlashcards = document.getElementById("btn-flashcards");
-
-// Notes Management UI Elements
-const btnSave = document.getElementById("btn-save");
-const btnNew = document.getElementById("btn-new");
-const notesListContainer = document.getElementById("notes-list");
-
-// Optional API Key configurations
-const apiKeyInput = document.getElementById("api-key-input");
-
-// Output UI Elements
-const outputPlaceholder = document.getElementById("output-placeholder");
-const outputLoading = document.getElementById("output-loading");
-const outputError = document.getElementById("output-error");
-const outputContent = document.getElementById("output-content");
-const loadingText = document.getElementById("loading-text");
-const errorMessage = document.getElementById("error-message");
-
-// State Variables
+// Global state variables
 let notesList = [];
 let activeNoteId = null;
 
+// DOM Elements (will be initialized when DOM is ready)
+let notesInput;
+let btnSummarize;
+let btnMCQs;
+let btnFlashcards;
+let btnSave;
+let btnNew;
+let notesListContainer;
+let apiKeyInput;
+
+let outputPlaceholder;
+let outputLoading;
+let outputError;
+let outputContent;
+let loadingText;
+let errorMessage;
+
 // Initialize App
 document.addEventListener("DOMContentLoaded", () => {
+    // 1. Initialize DOM references safely
+    notesInput = document.getElementById("notes-input");
+    btnSummarize = document.getElementById("btn-summarize");
+    btnMCQs = document.getElementById("btn-mcqs");
+    btnFlashcards = document.getElementById("btn-flashcards");
+    btnSave = document.getElementById("btn-save");
+    btnNew = document.getElementById("btn-new");
+    notesListContainer = document.getElementById("notes-list");
+    apiKeyInput = document.getElementById("api-key-input");
+
+    outputPlaceholder = document.getElementById("output-placeholder");
+    outputLoading = document.getElementById("output-loading");
+    outputError = document.getElementById("output-error");
+    outputContent = document.getElementById("output-content");
+    loadingText = document.getElementById("loading-text");
+    errorMessage = document.getElementById("error-message");
+
+    // 2. Load storage data
     loadNotesFromStorage();
     renderNotesList();
     loadApiKeyFromStorage();
+
+    // 3. Register Event Listeners
+    btnSave.addEventListener("click", saveNote);
+    btnNew.addEventListener("click", startNewNote);
+    apiKeyInput.addEventListener("input", saveApiKeyToStorage);
+
+    btnSummarize.addEventListener("click", () => handleAiAction("summarize"));
+    btnMCQs.addEventListener("click", () => handleAiAction("mcqs"));
+    btnFlashcards.addEventListener("click", () => handleAiAction("flashcards"));
 });
 
-// Event Listeners for Notes Management
-btnSave.addEventListener("click", saveNote);
-btnNew.addEventListener("click", startNewNote);
-apiKeyInput.addEventListener("input", saveApiKeyToStorage);
-
-// Event Listeners for AI action buttons
-btnSummarize.addEventListener("click", () => handleAiAction("summarize"));
-btnMCQs.addEventListener("click", () => handleAiAction("mcqs"));
-btnFlashcards.addEventListener("click", () => handleAiAction("flashcards"));
-
 // ==========================================================================
-// Notes Management Features (LocalStorage Persistence)
+// Notes Library Features (LocalStorage Persistence)
 // ==========================================================================
 
 /**
@@ -74,9 +86,10 @@ function saveNotesToStorage() {
 }
 
 /**
- * Loads custom API Key from localStorage (for GitHub Pages use-cases)
+ * Loads custom API Key from localStorage
  */
 function loadApiKeyFromStorage() {
+    if (!apiKeyInput) return;
     const savedKey = localStorage.getItem("smart_notes_custom_key");
     if (savedKey) {
         apiKeyInput.value = savedKey;
@@ -87,6 +100,7 @@ function loadApiKeyFromStorage() {
  * Saves custom API Key to localStorage when updated
  */
 function saveApiKeyToStorage() {
+    if (!apiKeyInput) return;
     localStorage.setItem("smart_notes_custom_key", apiKeyInput.value.trim());
 }
 
@@ -94,6 +108,7 @@ function saveApiKeyToStorage() {
  * Renders notes list inside the sidebar
  */
 function renderNotesList() {
+    if (!notesListContainer) return;
     notesListContainer.innerHTML = "";
 
     if (notesList.length === 0) {
@@ -105,9 +120,7 @@ function renderNotesList() {
         const noteItem = document.createElement("div");
         noteItem.className = `note-item ${note.id === activeNoteId ? "active" : ""}`;
         
-        // Setup click handler to load note content into editor
         noteItem.addEventListener("click", (e) => {
-            // Prevent loading if they click the delete button
             if (e.target.closest(".delete-btn")) return;
             selectNote(note.id);
         });
@@ -137,18 +150,22 @@ function selectNote(id) {
     if (!note) return;
 
     activeNoteId = id;
-    notesInput.value = note.content;
+    if (notesInput) {
+        notesInput.value = note.content;
+    }
     
-    // Highlight the active note in sidebar
     renderNotesList();
     hideAllStates();
-    outputPlaceholder.classList.remove("hidden");
+    if (outputPlaceholder) {
+        outputPlaceholder.classList.remove("hidden");
+    }
 }
 
 /**
  * Saves the note currently in the textarea
  */
 function saveNote() {
+    if (!notesInput) return;
     const textContent = notesInput.value.trim();
 
     if (!textContent) {
@@ -156,7 +173,6 @@ function saveNote() {
         return;
     }
 
-    // Generate a title based on the first few words of the note
     let title = textContent.split("\n")[0].substring(0, 25).trim();
     if (!title) {
         title = "Untitled Note";
@@ -165,7 +181,6 @@ function saveNote() {
     }
 
     if (activeNoteId) {
-        // Update existing note
         const noteIndex = notesList.findIndex(n => n.id === activeNoteId);
         if (noteIndex !== -1) {
             notesList[noteIndex].content = textContent;
@@ -173,23 +188,23 @@ function saveNote() {
             notesList[noteIndex].updatedAt = Date.now();
         }
     } else {
-        // Create new note
         const newNote = {
             id: "note_" + Date.now(),
             title: title,
             content: textContent,
             updatedAt: Date.now()
         };
-        notesList.unshift(newNote); // Add to the top of list
-        activeNoteId = newNote.id; // Set as active
+        notesList.unshift(newNote);
+        activeNoteId = newNote.id;
     }
 
     saveNotesToStorage();
     renderNotesList();
     
-    // Success animation triggers
-    btnSave.classList.add("btn-success-outline");
-    setTimeout(() => btnSave.classList.remove("btn-success-outline"), 1000);
+    if (btnSave) {
+        btnSave.classList.add("btn-success-outline");
+        setTimeout(() => btnSave.classList.remove("btn-success-outline"), 1000);
+    }
 }
 
 /**
@@ -197,11 +212,15 @@ function saveNote() {
  */
 function startNewNote() {
     activeNoteId = null;
-    notesInput.value = "";
-    notesInput.focus();
+    if (notesInput) {
+        notesInput.value = "";
+        notesInput.focus();
+    }
     renderNotesList();
     hideAllStates();
-    outputPlaceholder.classList.remove("hidden");
+    if (outputPlaceholder) {
+        outputPlaceholder.classList.remove("hidden");
+    }
 }
 
 /**
@@ -211,30 +230,34 @@ function deleteNote(id) {
     notesList = notesList.filter(n => n.id !== id);
     saveNotesToStorage();
 
-    // If the deleted note was loaded in the editor, clear it
     if (activeNoteId === id) {
         activeNoteId = null;
-        notesInput.value = "";
+        if (notesInput) {
+            notesInput.value = "";
+        }
         hideAllStates();
-        outputPlaceholder.classList.remove("hidden");
+        if (outputPlaceholder) {
+            outputPlaceholder.classList.remove("hidden");
+        }
     }
 
     renderNotesList();
 }
 
 // ==========================================================================
-// AI Functions (Support Client-direct or Vercel Serverless proxy)
+// AI Functions (Calling Proxy / Direct Endpoint)
 // ==========================================================================
 
 /**
  * Coordinates AI requests, calls endpoints, and displays results.
- * @param {string} actionType - 'summarize', 'mcqs', or 'flashcards'
  */
 async function handleAiAction(actionType) {
+    if (!notesInput || !apiKeyInput) return;
+    
     const notesText = notesInput.value.trim();
     const userApiKey = apiKeyInput.value.trim();
 
-    // 1. Validation: Prevent empty submissions
+    // 1. Input validations
     if (!notesText) {
         showError("Please paste or type some study notes before submitting.");
         return;
@@ -245,7 +268,6 @@ async function handleAiAction(actionType) {
         return;
     }
 
-    // 2. UI State: Show Loading indicator
     showLoading(actionType);
 
     try {
@@ -255,12 +277,11 @@ async function handleAiAction(actionType) {
             // Path A: Client-side direct call (For GitHub Pages deployment using user's key)
             const promptText = getPromptText(actionType, notesText);
             const apiPayload = {
-                contents: [{ parts: [{ text: promptText }] }],
-                generationConfig: { responseMimeType: "application/json" }
+                contents: [{ parts: [{ text: promptText }] }]
             };
             
             response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userApiKey}`,
+                `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${userApiKey}`,
                 {
                     method: "POST",
                     headers: {
@@ -270,7 +291,7 @@ async function handleAiAction(actionType) {
                 }
             );
         } else {
-            // Path B: Vercel Serverless Proxy call (Uses Vercel server process.env.GEMINI_API_KEY)
+            // Path B: Vercel Serverless Proxy call (Uses env GEMINI_API_KEY on server)
             response = await fetch("/api/summarize", {
                 method: "POST",
                 headers: {
@@ -283,7 +304,7 @@ async function handleAiAction(actionType) {
             });
         }
 
-        // 3. Handle Errors (Gemini failures / network exceptions)
+        // 3. Response validation
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             const serverErrorMsg = errorData.error?.message || `Server returned HTTP status ${response.status}`;
@@ -293,15 +314,21 @@ async function handleAiAction(actionType) {
         const responseData = await response.json();
         let parsedResult;
 
-        // 4. Extract result data depending on call path
+        // 4. Output parsing
         if (userApiKey) {
             const rawJsonText = responseData.candidates[0].content.parts[0].text;
-            parsedResult = JSON.parse(rawJsonText);
+            let cleanJsonText = rawJsonText.trim();
+            
+            // Strip markdown formatting if the model wraps JSON in backticks
+            if (cleanJsonText.startsWith("```")) {
+                cleanJsonText = cleanJsonText.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+            }
+            parsedResult = JSON.parse(cleanJsonText.trim());
         } else {
             parsedResult = responseData;
         }
 
-        // 5. Render result onto screen
+        // 5. Render
         renderOutput(actionType, parsedResult);
 
     } catch (error) {
@@ -331,8 +358,10 @@ function getPromptText(actionType, notes) {
  */
 function renderOutput(actionType, data) {
     hideAllStates();
+    if (!outputContent) return;
+    
     outputContent.classList.remove("hidden");
-    outputContent.innerHTML = ""; // Clear old outputs
+    outputContent.innerHTML = "";
 
     if (actionType === "summarize") {
         const summaryHtml = `
@@ -403,6 +432,8 @@ function renderOutput(actionType, data) {
  */
 function showLoading(actionType) {
     hideAllStates();
+    if (!outputLoading || !loadingText) return;
+    
     outputLoading.classList.remove("hidden");
     
     let text = "Gemini is thinking and preparing your content...";
@@ -418,6 +449,7 @@ function showLoading(actionType) {
  */
 function showError(message) {
     hideAllStates();
+    if (!outputError || !errorMessage) return;
     outputError.classList.remove("hidden");
     errorMessage.textContent = message;
 }
@@ -426,10 +458,10 @@ function showError(message) {
  * Helper to hide all feedback states
  */
 function hideAllStates() {
-    outputPlaceholder.classList.add("hidden");
-    outputLoading.classList.add("hidden");
-    outputError.classList.add("hidden");
-    outputContent.classList.add("hidden");
+    if (outputPlaceholder) outputPlaceholder.classList.add("hidden");
+    if (outputLoading) outputLoading.classList.add("hidden");
+    if (outputError) outputError.classList.add("hidden");
+    if (outputContent) outputContent.classList.add("hidden");
 }
 
 /**
