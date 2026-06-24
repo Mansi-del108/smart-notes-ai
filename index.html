@@ -22,15 +22,37 @@
             <p class="app-subtitle">Transform your study notes into summaries, multiple-choice questions, or flashcards instantly.</p>
         </header>
 
-        <!-- Main Workspace Card -->
-        <main class="workspace-card">
-            <!-- Input Form Section -->
-            <section class="input-section">
-                <label for="notes-input" class="input-label">Paste Your Study Notes Here</label>
+        <!-- Main Workspace Card (Split Layout for Note Management) -->
+        <main class="workspace-card main-layout">
+            <!-- Left Panel: Notes Manager Sidebar -->
+            <aside class="sidebar-panel">
+                <div class="sidebar-header">
+                    <h3 class="panel-subtitle">My Library</h3>
+                    <button id="btn-new" class="icon-btn" title="Create a new blank note">➕ New</button>
+                </div>
+                <div id="notes-list" class="notes-list">
+                    <!-- Dynamic local storage notes will go here -->
+                    <div class="empty-list-msg">No saved notes yet.</div>
+                </div>
+
+                <!-- Optional API Key Input (For GitHub Pages / Local Static Hosting) -->
+                <div class="api-settings">
+                    <label for="api-key-input" class="api-settings-label">🔑 Gemini API Key</label>
+                    <input type="password" id="api-key-input" placeholder="Paste your API key here..." class="api-settings-input" />
+                    <span class="api-settings-help">Leave empty to use Vercel Serverless proxy.</span>
+                </div>
+            </aside>
+
+            <!-- Right Panel: Editor and AI Tool Panel -->
+            <section class="editor-panel">
+                <div class="editor-header">
+                    <label for="notes-input" class="input-label">Active Notes Editor</label>
+                    <button id="btn-save" class="icon-btn btn-success-outline" title="Save changes to library">💾 Save Note</button>
+                </div>
                 <textarea 
                     id="notes-input" 
                     placeholder="Enter or paste your text, lecture notes, or textbook paragraphs here (minimum 20 characters for best results)..." 
-                    rows="10"
+                    rows="8"
                 ></textarea>
                 
                 <!-- Action Controls -->
@@ -46,12 +68,13 @@
                     </button>
                 </div>
             </section>
+        </main>
 
-            <!-- Divider Line -->
-            <hr class="section-divider">
+        <!-- Divider Line -->
+        <hr class="section-divider">
 
-            <!-- Output Section -->
-            <section class="output-section">
+        <!-- Output Section (Separated from the Workspace Card for readability) -->
+        <section class="workspace-card output-section">
                 <h2 class="output-label">AI Output</h2>
                 
                 <!-- Output Placeholder / Welcome Message -->

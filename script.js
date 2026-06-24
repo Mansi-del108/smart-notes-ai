@@ -1,10 +1,6 @@
 // ==========================================================================
-// Smart Notes AI - Main Application Logic
+// Smart Notes AI - Main Application Logic (Vercel & note manager)
 // ==========================================================================
-
-// ⚠️ IMPORTANT: Replace this placeholder with your actual Gemini API key.
-// You can get a free key from Google AI Studio (https://aistudio.google.com/)
-const GEMINI_API_KEY = "PASTE_YOUR_API_KEY_HERE";
 
 // DOM Elements
 const notesInput = document.getElementById("notes-input");
@@ -12,28 +8,233 @@ const btnSummarize = document.getElementById("btn-summarize");
 const btnMCQs = document.getElementById("btn-mcqs");
 const btnFlashcards = document.getElementById("btn-flashcards");
 
+// Notes Management UI Elements
+const btnSave = document.getElementById("btn-save");
+const btnNew = document.getElementById("btn-new");
+const notesListContainer = document.getElementById("notes-list");
+
+// Optional API Key configurations
+const apiKeyInput = document.getElementById("api-key-input");
+
+// Output UI Elements
 const outputPlaceholder = document.getElementById("output-placeholder");
 const outputLoading = document.getElementById("output-loading");
 const outputError = document.getElementById("output-error");
 const outputContent = document.getElementById("output-content");
-
 const loadingText = document.getElementById("loading-text");
 const errorMessage = document.getElementById("error-message");
 
-// Event Listeners for action buttons
-btnSummarize.addEventListener("click", () => handleAction("summarize"));
-btnMCQs.addEventListener("click", () => handleAction("mcqs"));
-btnFlashcards.addEventListener("click", () => handleAction("flashcards"));
+// State Variables
+let notesList = [];
+let activeNoteId = null;
+
+// Initialize App
+document.addEventListener("DOMContentLoaded", () => {
+    loadNotesFromStorage();
+    renderNotesList();
+    loadApiKeyFromStorage();
+});
+
+// Event Listeners for Notes Management
+btnSave.addEventListener("click", saveNote);
+btnNew.addEventListener("click", startNewNote);
+apiKeyInput.addEventListener("input", saveApiKeyToStorage);
+
+// Event Listeners for AI action buttons
+btnSummarize.addEventListener("click", () => handleAiAction("summarize"));
+btnMCQs.addEventListener("click", () => handleAiAction("mcqs"));
+btnFlashcards.addEventListener("click", () => handleAiAction("flashcards"));
+
+// ==========================================================================
+// Notes Management Features (LocalStorage Persistence)
+// ==========================================================================
 
 /**
- * Main coordinator function that validates inputs, displays loading status,
- * makes the API call, and displays results.
- * @param {string} actionType - The type of action to perform ('summarize', 'mcqs', 'flashcards')
+ * Loads notes from localStorage
  */
-async function handleAction(actionType) {
-    const notesText = notesInput.value.trim();
+function loadNotesFromStorage() {
+    try {
+        const savedNotes = localStorage.getItem("smart_notes_list");
+        notesList = savedNotes ? JSON.parse(savedNotes) : [];
+    } catch (e) {
+        console.error("Failed to load notes from localStorage:", e);
+        notesList = [];
+    }
+}
 
-    // 1. Validation: Prevent empty textarea submissions
+/**
+ * Saves current notes array to localStorage
+ */
+function saveNotesToStorage() {
+    try {
+        localStorage.setItem("smart_notes_list", JSON.stringify(notesList));
+    } catch (e) {
+        console.error("Failed to save notes to localStorage:", e);
+    }
+}
+
+/**
+ * Loads custom API Key from localStorage (for GitHub Pages use-cases)
+ */
+function loadApiKeyFromStorage() {
+    const savedKey = localStorage.getItem("smart_notes_custom_key");
+    if (savedKey) {
+        apiKeyInput.value = savedKey;
+    }
+}
+
+/**
+ * Saves custom API Key to localStorage when updated
+ */
+function saveApiKeyToStorage() {
+    localStorage.setItem("smart_notes_custom_key", apiKeyInput.value.trim());
+}
+
+/**
+ * Renders notes list inside the sidebar
+ */
+function renderNotesList() {
+    notesListContainer.innerHTML = "";
+
+    if (notesList.length === 0) {
+        notesListContainer.innerHTML = `<div class="empty-list-msg">No saved notes yet.</div>`;
+        return;
+    }
+
+    notesList.forEach(note => {
+        const noteItem = document.createElement("div");
+        noteItem.className = `note-item ${note.id === activeNoteId ? "active" : ""}`;
+        
+        // Setup click handler to load note content into editor
+        noteItem.addEventListener("click", (e) => {
+            // Prevent loading if they click the delete button
+            if (e.target.closest(".delete-btn")) return;
+            selectNote(note.id);
+        });
+
+        const titleWrapper = document.createElement("div");
+        titleWrapper.className = "note-title-wrapper";
+        titleWrapper.textContent = note.title;
+        titleWrapper.title = note.content;
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "delete-btn";
+        deleteBtn.innerHTML = "🗑️";
+        deleteBtn.title = "Delete Note";
+        deleteBtn.addEventListener("click", () => deleteNote(note.id));
+
+        noteItem.appendChild(titleWrapper);
+        noteItem.appendChild(deleteBtn);
+        notesListContainer.appendChild(noteItem);
+    });
+}
+
+/**
+ * Select and load a note into the editor
+ */
+function selectNote(id) {
+    const note = notesList.find(n => n.id === id);
+    if (!note) return;
+
+    activeNoteId = id;
+    notesInput.value = note.content;
+    
+    // Highlight the active note in sidebar
+    renderNotesList();
+    hideAllStates();
+    outputPlaceholder.classList.remove("hidden");
+}
+
+/**
+ * Saves the note currently in the textarea
+ */
+function saveNote() {
+    const textContent = notesInput.value.trim();
+
+    if (!textContent) {
+        showError("Cannot save an empty note.");
+        return;
+    }
+
+    // Generate a title based on the first few words of the note
+    let title = textContent.split("\n")[0].substring(0, 25).trim();
+    if (!title) {
+        title = "Untitled Note";
+    } else if (textContent.length > 25) {
+        title += "...";
+    }
+
+    if (activeNoteId) {
+        // Update existing note
+        const noteIndex = notesList.findIndex(n => n.id === activeNoteId);
+        if (noteIndex !== -1) {
+            notesList[noteIndex].content = textContent;
+            notesList[noteIndex].title = title;
+            notesList[noteIndex].updatedAt = Date.now();
+        }
+    } else {
+        // Create new note
+        const newNote = {
+            id: "note_" + Date.now(),
+            title: title,
+            content: textContent,
+            updatedAt: Date.now()
+        };
+        notesList.unshift(newNote); // Add to the top of list
+        activeNoteId = newNote.id; // Set as active
+    }
+
+    saveNotesToStorage();
+    renderNotesList();
+    
+    // Success animation triggers
+    btnSave.classList.add("btn-success-outline");
+    setTimeout(() => btnSave.classList.remove("btn-success-outline"), 1000);
+}
+
+/**
+ * Clears active selection and editor
+ */
+function startNewNote() {
+    activeNoteId = null;
+    notesInput.value = "";
+    notesInput.focus();
+    renderNotesList();
+    hideAllStates();
+    outputPlaceholder.classList.remove("hidden");
+}
+
+/**
+ * Deletes a note
+ */
+function deleteNote(id) {
+    notesList = notesList.filter(n => n.id !== id);
+    saveNotesToStorage();
+
+    // If the deleted note was loaded in the editor, clear it
+    if (activeNoteId === id) {
+        activeNoteId = null;
+        notesInput.value = "";
+        hideAllStates();
+        outputPlaceholder.classList.remove("hidden");
+    }
+
+    renderNotesList();
+}
+
+// ==========================================================================
+// AI Functions (Support Client-direct or Vercel Serverless proxy)
+// ==========================================================================
+
+/**
+ * Coordinates AI requests, calls endpoints, and displays results.
+ * @param {string} actionType - 'summarize', 'mcqs', or 'flashcards'
+ */
+async function handleAiAction(actionType) {
+    const notesText = notesInput.value.trim();
+    const userApiKey = apiKeyInput.value.trim();
+
+    // 1. Validation: Prevent empty submissions
     if (!notesText) {
         showError("Please paste or type some study notes before submitting.");
         return;
@@ -44,99 +245,96 @@ async function handleAction(actionType) {
         return;
     }
 
-    // 2. Setup API Key Verification
-    if (GEMINI_API_KEY === "YOUR_API_KEY_HERE" || !GEMINI_API_KEY.trim()) {
-        showError(
-            "API Key missing! Please open 'script.js' and replace the variable GEMINI_API_KEY value at line 6 with your actual Google Gemini API key."
-        );
-        return;
-    }
-
-    // 3. UI State: Show Loading and hide previous states
+    // 2. UI State: Show Loading indicator
     showLoading(actionType);
 
     try {
-        // Prepare prompt and request schema depending on action
-        const apiPayload = getApiPayload(actionType, notesText);
+        let response;
         
-        // 4. API Call using native fetch()
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-            {
+        if (userApiKey) {
+            // Path A: Client-side direct call (For GitHub Pages deployment using user's key)
+            const promptText = getPromptText(actionType, notesText);
+            const apiPayload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                generationConfig: { responseMimeType: "application/json" }
+            };
+            
+            response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userApiKey}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(apiPayload)
+                }
+            );
+        } else {
+            // Path B: Vercel Serverless Proxy call (Uses Vercel server process.env.GEMINI_API_KEY)
+            response = await fetch("/api/summarize", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(apiPayload)
-            }
-        );
+                body: JSON.stringify({
+                    text: notesText,
+                    type: actionType
+                })
+            });
+        }
 
+        // 3. Handle Errors (Gemini failures / network exceptions)
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            const apiMsg = errorData.error?.message || `HTTP error! status: ${response.status}`;
-            throw new Error(apiMsg);
+            const serverErrorMsg = errorData.error?.message || `Server returned HTTP status ${response.status}`;
+            throw new Error(serverErrorMsg);
         }
 
         const responseData = await response.json();
-        
-        // Extract raw text response containing our JSON
-        const rawJsonText = responseData.candidates[0].content.parts[0].text;
-        const parsedResult = JSON.parse(rawJsonText);
+        let parsedResult;
 
-        // 5. Render Output
+        // 4. Extract result data depending on call path
+        if (userApiKey) {
+            const rawJsonText = responseData.candidates[0].content.parts[0].text;
+            parsedResult = JSON.parse(rawJsonText);
+        } else {
+            parsedResult = responseData;
+        }
+
+        // 5. Render result onto screen
         renderOutput(actionType, parsedResult);
 
     } catch (error) {
-        console.error("API Error Details:", error);
+        console.error("AI Operations Error:", error);
         showError(`AI generation failed: ${error.message}`);
     }
 }
 
 /**
- * Build the payload and request structure for Gemini API.
- * Uses structured JSON outputs for reliable parsing.
+ * Returns prompt instructions based on type
  */
-function getApiPayload(actionType, notes) {
-    let promptText = "";
-    
+function getPromptText(actionType, notes) {
     switch (actionType) {
         case "summarize":
-            promptText = `You are a study assistant. Summarize the following study notes in a clean, concise paragraph. Your output must be a JSON object containing a "summary" field (string) with the summarized text.\n\nNotes:\n${notes}`;
-            break;
+            return `You are a study assistant. Summarize the following study notes in a clean, concise paragraph. Your output must be a JSON object containing a "summary" field (string) with the summarized text.\n\nNotes:\n${notes}`;
         case "mcqs":
-            promptText = `You are a study assistant. Generate exactly 5 multiple-choice questions based on the following study notes. For each question, provide 4 distinct options and clearly specify which option is the correct answer. Your output must be a JSON array of objects. Each object in the array must have these keys:\n- "question" (string)\n- "options" (array of 4 strings)\n- "answer" (string, the correct option text)\n\nNotes:\n${notes}`;
-            break;
+            return `You are a study assistant. Generate exactly 5 multiple-choice questions based on the following study notes. For each question, provide 4 distinct options and clearly specify which option is the correct answer. Your output must be a JSON array of objects. Each object in the array must have these keys:\n- "question" (string)\n- "options" (array of 4 strings)\n- "answer" (string, the correct option text)\n\nNotes:\n${notes}`;
         case "flashcards":
-            promptText = `You are a study assistant. Generate exactly 5 flashcards based on the following study notes. Each flashcard should test a key concept. Your output must be a JSON array of objects. Each object in the array must have these keys:\n- "question" (string)\n- "answer" (string)\n\nNotes:\n${notes}`;
-            break;
+            return `You are a study assistant. Generate exactly 5 flashcards based on the following study notes. Each flashcard should test a key concept. Your output must be a JSON array of objects. Each object in the array must have these keys:\n- "question" (string)\n- "answer" (string)\n\nNotes:\n${notes}`;
+        default:
+            return `You are a study assistant. Summarize the following study notes in a clean, concise paragraph. Your output must be a JSON object containing a "summary" field (string) with the summarized text.\n\nNotes:\n${notes}`;
     }
-
-    return {
-        contents: [
-            {
-                parts: [
-                    { text: promptText }
-                ]
-            }
-        ],
-        // Generation Configuration requests JSON format directly from Gemini
-        generationConfig: {
-            responseMimeType: "application/json"
-        }
-    };
 }
 
 /**
  * Handle HTML rendering depending on the selected action
  */
 function renderOutput(actionType, data) {
-    // Hide loading, error, and placeholder
     hideAllStates();
     outputContent.classList.remove("hidden");
     outputContent.innerHTML = ""; // Clear old outputs
 
     if (actionType === "summarize") {
-        // Summary Formatting
         const summaryHtml = `
             <div class="summary-container">
                 <h3 class="summary-title">Summary</h3>
@@ -146,18 +344,15 @@ function renderOutput(actionType, data) {
         outputContent.innerHTML = summaryHtml;
 
     } else if (actionType === "mcqs") {
-        // MCQs Formatting
         const mcqContainer = document.createElement("div");
         mcqContainer.className = "mcq-container";
 
-        // Expecting an array of 5 questions
         const questions = Array.isArray(data) ? data : (data.questions || []);
 
         questions.forEach((q, idx) => {
             const mcqItem = document.createElement("div");
             mcqItem.className = "mcq-item";
 
-            // Generate option elements
             const optionsListHtml = q.options.map(option => `
                 <li class="mcq-option">
                     <strong>${escapeHtml(option)}</strong>
@@ -177,11 +372,9 @@ function renderOutput(actionType, data) {
         outputContent.appendChild(mcqContainer);
 
     } else if (actionType === "flashcards") {
-        // Flashcards Formatting
         const flashcardsContainer = document.createElement("div");
         flashcardsContainer.className = "flashcards-container";
 
-        // Expecting an array of 5 cards
         const cards = Array.isArray(data) ? data : (data.flashcards || []);
 
         cards.forEach(card => {
@@ -213,7 +406,7 @@ function showLoading(actionType) {
     outputLoading.classList.remove("hidden");
     
     let text = "Gemini is thinking and preparing your content...";
-    if (actionType === "summarize") text = "Summarizing your notes...";
+    if (actionType === "summarize") text = "Summarizing active note...";
     if (actionType === "mcqs") text = "Generating 5 multiple-choice questions...";
     if (actionType === "flashcards") text = "Designing 5 custom flashcards...";
 

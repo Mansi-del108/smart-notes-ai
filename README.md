@@ -2,15 +2,16 @@
 
 A simple, student-friendly, and responsive single-page web application that converts study notes into structured summaries, multiple-choice questions (MCQs), or customizable flashcards using the Google Gemini API.
 
-Built entirely using raw **HTML**, **CSS**, and **Vanilla JavaScript** without any external frameworks, databases, or complex configurations.
+This project is optimized for direct browser usage or secure deployment to **Vercel** via Node.js Serverless Functions, keeping your API key hidden from frontend code.
 
 ---
 
 ## 🚀 Features
 
-1. **Summarize Notes**: Generate a concise, study-focused summary paragraph from pasted notes.
-2. **Generate MCQs**: Generate 5 multiple-choice questions with 4 distinct options and correct answers highlighted.
-3. **Generate Flashcards**: Create 5 custom visual cards containing core question-and-answer concepts.
+1. **Saved Notes Library**: Manage study notes with full Create, Read, and Delete capability. Notes are persistent locally in your browser using `localStorage`.
+2. **Summarize Notes**: Generate a concise, study-focused summary paragraph from pasted notes.
+3. **Generate MCQs**: Generate 5 multiple-choice questions with 4 distinct options and correct answers highlighted.
+4. **Generate Flashcards**: Create 5 custom visual cards containing core question-and-answer concepts.
 
 ---
 
@@ -19,55 +20,56 @@ Built entirely using raw **HTML**, **CSS**, and **Vanilla JavaScript** without a
 ```
 smart-notes-ai/
 │
-├── index.html   # Main application structure (Layout, textarea, inputs, and UI widgets)
-├── style.css    # Aesthetic styles (Responsive design, soft transitions, blue palette)
-├── script.js    # Application logic (Event handlers, Gemini API fetch, parsing & rendering)
-└── README.md    # Getting started documentation
+├── api/
+│   └── summarize.js  # Vercel Node.js serverless function (safe API proxy)
+│
+├── index.html        # Main app UI structure (Layout split, editor panel, settings)
+├── style.css         # Responsive styling (split grid layout, variables, key animations)
+├── script.js         # Core logic (local storage, route selection, DOM formatting)
+└── README.md         # Deployment & setup documentation
 ```
 
 ---
 
-## 🛠️ Getting Started
+## 🛠️ Deployment Instructions
 
-To run this project locally, follow these steps:
+This project supports two different deployment methods:
 
-### 1. Obtain a Google Gemini API Key
-1. Visit the [Google AI Studio](https://aistudio.google.com/).
-2. Sign in with your Google account.
-3. Click on the **Create API Key** button.
-4. Copy your generated API key.
+### Option A: Secure Vercel Deployment (Recommended)
+This approach completely hides your Gemini API key from the browser. The frontend calls the local `/api/summarize` proxy, which then calls Gemini on the backend using an environment variable.
 
-### 2. Add Your API Key
-1. Open the file [script.js](file:///C:/Users/DELL/.gemini/antigravity/scratch/smart-notes-ai/script.js).
-2. Locate the variable at the top of the file:
-   ```javascript
-   const GEMINI_API_KEY = "YOUR_API_KEY_HERE";
-   ```
-3. Replace `"YOUR_API_KEY_HERE"` with your actual API key.
-4. Save the file.
+1. **Deploy to Vercel**:
+   - Push your code to a GitHub repository.
+   - Import the project into your Vercel Dashboard.
+2. **Add Environment Variable**:
+   - In Vercel Project Settings, navigate to **Environment Variables**.
+   - Create a variable named: **`GEMINI_API_KEY`**
+   - Value: *Your actual Gemini API key* (Obtain it from [Google AI Studio](https://aistudio.google.com/)).
+3. **Save and Deploy**:
+   - Save the environment variable.
+   - Redeploy the project. 
+   - Since Vercel automatically routes the `/api/` directory, the backend function works immediately without any `vercel.json` configuration files!
 
-### 3. Open the App in Your Browser
-Double-click `index.html` (or drag and drop it into any modern web browser like Chrome, Firefox, or Edge) to launch the application.
+---
+
+### Option B: GitHub Pages Deployment (Static Frontend)
+Since GitHub Pages hosts static files and has no serverless capabilities, you can enter your API key directly on the page.
+
+1. **Configure Pages**:
+   - Push your code to a GitHub repository.
+   - Go to your repository **Settings** -> **Pages**.
+   - Select the branch (e.g., `main`) and folder (`/root`), then click **Save**.
+2. **Enter API Key in the UI**:
+   - Open your deployed GitHub Pages URL in your browser.
+   - In the sidebar under **🔑 Gemini API Key**, paste your API key.
+   - The app will save the key locally to the browser's `localStorage` and perform API requests directly from the client.
+   - *Note: Leave the API key field empty if you are running on Vercel to default to the secure backend proxy.*
 
 ---
 
 ## ⚡ How it Works (Under the Hood)
 
-This application uses the native browser `fetch()` API to call the **Google Gemini API** (`gemini-2.5-flash` model endpoint). 
-
-Here is how the API communication works:
-
-1. **Validation**: The script checks if the notes input is empty or too short (less than 20 characters).
-2. **Payload Construction**: The script bundles the user's notes and prepends a prompt instructing the model to analyze the content and respond with structured JSON format using `generationConfig.responseMimeType = "application/json"`.
-3. **API Request**:
-   ```javascript
-   const response = await fetch(
-       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-       {
-           method: "POST",
-           headers: { "Content-Type": "application/json" },
-           body: JSON.stringify(apiPayload)
-       }
-   );
-   ```
-4. **Parsing & Rendering**: The returned JSON data is parsed and dynamically styled into paragraphs, MCQ lists, or flashcard cards, and loaded directly into the DOM output container.
+1. **Note Storage**: The app reads and updates the `smart_notes_list` array inside `localStorage` every time you save or delete a note.
+2. **API Path Routing**:
+   - If the **Gemini API Key** field in the sidebar is **filled**, the app performs a direct `fetch` call to Google Gemini (`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=...`).
+   - If the field is **empty**, the app performs a `fetch` POST to `/api/summarize`, which acts as a Node.js serverless proxy, reading the key from Vercel's `process.env.GEMINI_API_KEY`.
